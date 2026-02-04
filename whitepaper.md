@@ -1,249 +1,163 @@
 
+---
+
 # MulaMail 2.0: The Unified Protocol for Financial Communication
 
-**White Paper v1.0**
-**Date:** February 2026
-**Native Token:** ZEU
+**White Paper v1.1** | **Author: Oliver Qian** | **Network: Solana**
 
 ---
 
-## 1. Abstract
+## 1. Executive Summary: The Convergence of Speech and Value
 
-MulaMail 2.0 represents a paradigm shift in digital communication, effectively merging the semantic layer of email with the value layer of the blockchain. In the current Web2 landscape, communication (email/chat) and finance (banking/wallets) exist in disjointed silos, creating friction, security vulnerabilities, and identity fragmentation. MulaMail 2.0 resolves this by introducing a decentralized, non-custodial mail client built on the Solana blockchain, utilizing **ZK Compression** for infinite scalability and **MPC (Multi-Party Computation)** for seamless user onboarding.
+Digital communication is the heartbeat of the modern economy, yet it remains fundamentally disconnected from the systems that move capital. We use email to *negotiate* value, but we leave the inbox to *execute* it. This context-switching creates a $50 billion "friction gap" characterized by phishing risks, high transaction costs, and identity fragmentation.
 
-The core innovation of MulaMail 2.0 is the "Programmable Inbox." By leveraging **Solana Blinks (Blockchain Links)** and **Actions**, emails are no longer static text documents but dynamic, executable interfaces. A user can pay an invoice, vote in a DAO, or mint an NFT directly within the email body, signed securely by their embedded wallet. This ecosystem is powered by the **ZEU Token**, a utility asset designed to abstract gas fees, incentivize storage, and govern the protocol's anti-spam parameters.
-
----
-
-## 2. Introduction
-
-### 2.1 The Evolution of Digital Communication
-
-For over thirty years, the Simple Mail Transfer Protocol (SMTP) has served as the backbone of global communication. While robust, SMTP was designed in an era before digital value transfer. It lacks native encryption, identity verification is easily spoofed, and it cannot carry value (money) natively.
-
-As the world transitions to Web3, users are forced to manage two distinct digital identities:
-
-1. **The Email Address:** Their semantic identity (e.g., `alice@gmail.com`).
-2. **The Wallet Address:** Their financial identity (e.g., `8xrt...3kL9`).
-
-This separation creates a "Cognitive Gap." Users must copy-paste cryptographic addresses from emails to wallets, exposing them to phishing attacks, clipboard hijacking, and operational errors.
-
-### 2.2 The Web3 Onboarding Problem
-
-Despite the promise of decentralized finance (DeFi), mass adoption faces a critical hurdle: key management. The requirement to safeguard a 12-word seed phrase is a non-starter for the average internet user. Current solutions are either fully custodial (centralized exchanges) or fully self-sovereign (hardware wallets), with no middle ground that offers the ease of Web2 with the ownership of Web3.
-
-### 2.3 The MulaMail 2.0 Vision
-
-MulaMail 2.0 envisions a world where "sending an email" and "sending a transaction" are the same action. We are building a system where:
-
-* **Identity is Unified:** Your email address is your public key.
-* **Storage is Hybrid:** Privacy is guaranteed by strong encryption, while costs are minimized by cloud storage.
-* **Interaction is Native:** Applications live inside the message.
+**MulaMail 2.0** is the world’s first communication-finance hybrid. It is a non-custodial mail client that treats your email address as your blockchain identity. By integrating **Solana’s high-performance L1**, **ZK Compression**, and **Multi-Party Computation (MPC)**, MulaMail 2.0 provides an "Invisible Web3" experience. For the first time, users can send encrypted messages, pay invoices, swap assets, and participate in governance—all within a single, familiar interface that requires no seed phrases and costs less than a penny per interaction.
 
 ---
 
-## 3. Technical Architecture
+## 2. The Problem: The Triple Crisis of Digital Identity
 
-MulaMail 2.0 utilizes a **Hybrid Architecture** that balances the trustlessness of blockchain with the performance of cloud computing. The system comprises three primary layers: The Identity Layer (Solana), The Storage Layer (AWS S3 + IPFS), and The Interaction Layer (Client).
+The current digital landscape suffers from three critical flaws that MulaMail 2.0 is engineered to solve:
 
-### 3.1 The Identity Layer: ZK Compression & Account Abstraction
+### 2.1 The Friction of Fragmentation
 
-One of the primary challenges of building a blockchain-based email system is the cost of "State." On Solana, creating a standard Token Account or PDA (Program Derived Address) requires a "Rent" deposit (approx. 0.002 SOL). For a platform targeting 100 million users, this would require millions of dollars in locked capital.
+Currently, a user's digital life is split between **Semantic Identity** (Gmail, Outlook) and **Financial Identity** (Metamask, Phantom). Transitioning between these requires copying complex cryptographic strings, leading to "Clipboard Hijacking" and human error.
 
-**Solution: ZK Compression**
-MulaMail 2.0 integrates **ZK Compression** (powered by Light Protocol) to solve this scaling bottleneck.
+### 2.2 The Onboarding Chasm
 
-* **Merkle State Trees:** Instead of storing every user's account state (e.g., inbox settings, public keys, ZEU token balance) directly in Solana's expensive RAM, we store user data in off-chain ledger space, compressed into a 32-byte Merkle Root stored on-chain.
-* **Validity Proofs:** When a user updates their settings or receives a ZEU transfer, the system generates a Zero-Knowledge Validity Proof (SNARK) to prove that the state transition is valid without revealing the entire dataset to the main chain.
-* **Cost Reduction:** This reduces the cost of onboarding a user from ~$0.40 to <$0.0001, making "free accounts" economically viable.
+95% of internet users are unwilling to manage 12-word seed phrases. Without a solution that offers "Social Recovery" and "Password-like" security, blockchain will remain a niche tool for the 1%.
 
-### 3.2 The Cryptography Layer: The Ed25519-X25519 Bridge
+### 2.3 The Cost of Scale
 
-Solana wallets utilize the **Ed25519** elliptic curve for digital signatures. However, Ed25519 is not designed for encryption. To enable End-to-End Encryption (E2EE) without requiring users to manage a second set of keys, MulaMail 2.0 implements a deterministic key derivation bridge.
-
-The mathematical transformation is defined as:
-
-
-**The Workflow:**
-
-1. **Sender (Alice):** Retrieves Recipient (Bob)'s Solana Ed25519 Public Key.
-2. **Conversion:** Alice's client converts Bob's public key to the Curve25519 (X25519) format.
-3. **ECDH Handshake:** Alice generates an ephemeral key pair and performs an Elliptic Curve Diffie-Hellman (ECDH) exchange with Bob's converted public key to derive a `Shared_Secret`.
-4. **Encryption:** The email body is encrypted using `XSalsa20-Poly1305` or `AES-256-GCM` using the `Shared_Secret`.
-5. **Decryption:** Bob's client uses his private key (converted to scalar format) to reconstruct the `Shared_Secret` and decrypt the message.
-
-This ensures that **neither MulaMail 2.0 servers nor AWS S3** can ever read the contents of the emails, as they do not possess the private scalar required to derive the shared secret.
-
-### 3.3 The Storage Layer: Encrypted Blobs on S3
-
-Storing email bodies on-chain is inefficient and privacy-preserving disasters. MulaMail 2.0 uses a "Pointer System":
-
-* **On-Chain/Index:** Contains metadata: `Sender`, `Receiver`, `Timestamp`, `Content-Hash (SHA256)`, and `Action-Type`.
-* **Off-Chain (S3):** Contains the encrypted ciphertext.
-
-**Access Control via Signed Pointers:**
-To retrieve an email, the user's client must sign a challenge message `{"action": "read", "id": "email_123"}`. The backend verifies this signature against the user's Solana address and issues a temporary **AWS S3 Presigned URL**, granting read access for 60 seconds.
+Legacy blockchains cannot handle the state requirements of a global mail system. Storing an "inbox" for 100 million users on a traditional chain would cost billions in "Rent." Web3 communication has historically been too expensive to be free, and too complex to be popular.
 
 ---
 
-## 4. Identity & Onboarding: The MPC Revolution
+## 3. Technical Architecture: The MulaMail Engine
 
-MulaMail 2.0 removes the need for seed phrases through **Threshold Multi-Party Computation (MPC)**.
+MulaMail 2.0 uses a "Hybrid Sovereign" architecture. We utilize the cloud for **Storage** and the blockchain for **Identity and Truth**.
 
-### 4.1 Key Sharding (2-of-3 Model)
+### 3.1 MPC (Multi-Party Computation): The Onboarding Bridge
 
-When a user signs up with Google/Apple:
+To eliminate seed phrases, we utilize **Threshold MPC (2-of-3)**.
 
-1. **Shard A (Device Share):** Generated and stored in the user's device Secure Enclave (e.g., FaceID subsystem).
-2. **Shard B (Social Share):** Encrypted and stored by the MulaMail Auth Nodes, unlocked only via a valid OIDC token (e.g., successful Google Login).
-3. **Shard C (Recovery Share):** Encrypted with a user-defined PIN or answer and stored in cold storage (IPFS/Arweave).
+* **The Investor View:** It’s like a bank vault that needs two keys to open, but the user always holds the "master" power without having to manage a physical key.
+* **The Technical View:** Private keys are never generated or stored in one piece. Key shards are distributed across the user's device (Secure Enclave), a decentralized auth provider (OIDC), and a backup recovery shard. This ensures the user remains **non-custodial**—MulaMail cannot spend user funds, but the user can recover access via their email login.
 
-### 4.2 Reconstruction
+### 3.2 ZK Compression: The Scaling Breakthrough
 
-To sign a transaction or decrypt an email, the user needs **2 out of 3 shards**.
+On Solana, every "account" (inbox) requires a SOL deposit for rent. MulaMail 2.0 utilizes **ZK Compression** (Light Protocol) to bypass this.
 
-* **Daily Use:** Device Share + Social Share = Full Private Key (reconstructed ephemerally in memory).
-* **Device Loss:** Social Share + Recovery Share allows the user to regenerate the Device Share on a new phone.
+* **Mechanism:** Thousands of user account states are compressed into a single Merkle Root. Only the root is stored on-chain.
+* **Impact:** We reduce the cost of creating a Web3 mailbox by **99.9%**. This allows MulaMail 2.0 to be the first Web3 mail platform to offer a truly free-to-use tier for the masses.
 
-### 4.3 The "Shadow Wallet" for Web2 Users
+### 3.3 The Encryption Protocol (X25519)
 
-If a MulaMail user sends an encrypted email to a non-user (e.g., `bob@yahoo.com`), the protocol automatically creates a **Shadow Wallet**.
+Privacy is not optional. Every MulaMail is **End-to-End Encrypted (E2EE)**.
 
-1. A temporary key pair is generated.
-2. The private key is encrypted with a master key derived from the recipient's email hash and stored in a "Holding Smart Contract."
-3. The recipient receives a standard legacy email with a link.
-4. Upon clicking and authenticating via OAuth, the Shadow Wallet is upgraded to a full MPC wallet, and the private key is handed over to the user.
+* We fetch the recipient’s Solana Public Key (Ed25519) and mathematically derive a Curve25519 (X25519) encryption key.
+* Even if our AWS S3 storage is compromised, the messages appear as random noise. Only the recipient’s private MPC shard can unlock the content.
 
 ---
 
-## 5. The Programmable Inbox: Solana Blinks & Actions
+## 4. The Product: The "Living Inbox"
 
-The defining feature of MulaMail 2.0 is the **Programmable Inbox**. We leverage the **Solana Actions** standard (GET/POST specification) to turn URLs into interfaces.
+The core innovation is the transformation of the email body into a **Programmable Interface** using **Solana Actions and Blinks**.
 
-### 5.1 Dynamic Rendering
+### 4.1 Solana Blinks (Blockchain Links)
 
-When MulaMail 2.0 detects a specialized URL (e.g., `solana-action:https://jup.ag/swap/SOL-ZEU`) in the email body, it does not render a blue hyperlink. Instead, the client fetches the metadata from that URL and renders a **Blink (Blockchain Link)**.
+When a MulaMail 2.0 user receives a link to a DeFi swap, an NFT mint, or a payment request, the client doesn't just show a link. It renders a **Blink**—an interactive widget.
 
-A Blink is a standardized UI Card component containing:
+* **One-Click Settlement:** Pay a 500 USDC invoice directly via a button in the email.
+* **Embedded Swaps:** Exchange ZEU tokens or SOL without leaving the thread.
 
-* **Icon & Title:** (e.g., "Jupiter Exchange")
-* **Input Fields:** (e.g., "Amount to Swap")
-* **Action Buttons:** (e.g., "Confirm Swap")
+### 4.2 The Developer SDK
 
-### 5.2 Use Cases
+MulaMail 2.0 is an open platform. Third-party developers can build "Mula-Apps"—plugins that trigger based on email headers.
 
-1. **Invoice Settlement:** A freelancer sends an invoice. The email *is* the payment terminal. The client sees a "Pay 500 USDC" button. Clicking it prompts the embedded wallet to sign the transfer. The invoice status updates to "Paid" on-chain instantly.
-2. **Governance:** A DAO sends a proposal. The email contains "Vote Yes" and "Vote No" buttons. The user votes without leaving the inbox.
-3. **Token Gating:** An email's content is encrypted such that it can only be decrypted if the recipient's wallet holds a specific NFT (verified via local proof).
-
-### 5.3 Security Sandbox
-
-To prevent malicious actions (e.g., a button that says "Claim Airdrop" but drains the wallet), MulaMail 2.0 implements a strict **Execution Sandbox**:
-
-* **Domain Allow-listing:** Only trusted Action Providers are rendered by default. Unknown domains show a warning.
-* **Transaction Simulation:** Before the user signs, the client runs a `simulateTransaction` RPC call. If the simulation shows asset balances decreasing unexpectedly, the UI turns red and blocks the signature.
+* **Example:** A "Payroll Plugin" for DAOs that automatically detects invoice attachments and generates a bulk-payment Blink for the treasury manager.
 
 ---
 
-## 6. The ZEU Token Economy
+## 5. The ZEU Tokenomics: A Deflationary Utility Model
 
-The **ZEU Token** is the native utility and governance asset of the MulaMail 2.0 ecosystem. It is designed to capture the value of the network's usage while minimizing friction for end-users.
+The **ZEU Token** is the native fuel of the ecosystem. It is designed to capture value as the network grows.
 
-### 6.1 Token Utility
+| Feature | Utility of ZEU |
+| --- | --- |
+| **Gas Abstraction** | Users pay transaction fees in ZEU. The platform handles the SOL conversion in the background. |
+| **Proof-of-Stake Mail** | Cold-emailing a stranger requires a ZEU "bond." If they mark you as spam, the ZEU is **burned**. |
+| **Premium Storage** | Staking ZEU unlocks 100GB+ storage tiers and custom domains (e.g., `you@yourname.sol`). |
+| **Governance** | ZEU holders vote on which "Blinks" are whitelisted in the official marketplace. |
 
-1. **Gas Abstraction (Fee Sponsorship):**
-* New users do not have SOL for gas.
-* **The Relay System:** Users can pay for transaction fees using ZEU (or even USDC). The MulaMail Relayer pays the SOL gas on-chain and deducts the equivalent ZEU from the user's balance.
+### 5.1 The Burn Mechanism (Deflationary Pressure)
 
-
-2. **Storage Premium:**
-* Free users have a storage cap (e.g., 1GB).
-* Staking ZEU unlocks "Premium Tiers" (100GB, 1TB) and "Permanent Storage" on Arweave.
-
-
-3. **Proof-of-Stake Communication (Anti-Spam):**
-* To send a cold email to a stranger, the sender must "attach" a micro-stake of ZEU (e.g., 0.1 ZEU).
-* If the recipient marks the email as Spam, the 0.1 ZEU is burned (deflationary).
-* If the recipient replies, the 0.1 ZEU is returned to the sender.
-* This economic hurdle makes high-volume spamming mathematically unprofitable.
-
-
-
-### 6.2 Token Distribution (Total Supply: 1,000,000,000 ZEU)
-
-* **Community & Ecosystem (40%):** Airdrops for early adopters, grants for plugin developers, and user growth incentives.
-* **Treasury (20%):** Reserved for future protocol development and liquidity provision.
-* **Team & Contributors (15%):** Vested over 4 years with a 1-year cliff.
-* **Investors (15%):** Seed and Private rounds.
-* **Liquidity Bootstrapping (10%):** Initial DEX offerings (IDO) and CEX listings.
-
-### 6.3 Deflationary Mechanics
-
-* **Spam Burns:** As mentioned, spammers burn ZEU.
-* **Plugin Fees:** 1% of fees generated by premium plugins (e.g., a paid newsletter subscription plugin) are used to buy back and burn ZEU.
+MulaMail 2.0 implements a **Buy-Back and Burn** program. 20% of all revenue generated from enterprise subscriptions and "Blink" transaction fees is used to purchase ZEU from the open market and permanently remove it from circulation.
 
 ---
 
-## 7. Governance & DAO
+## 6. Market Strategy & Competitive Moat
 
-MulaMail 2.0 will transition to a **Decentralized Autonomous Organization (DAO)**.
+### 6.1 Target Audience: The "Web3 Curious"
 
-* **Phase 1 (Centralized):** The core team controls the protocol parameters (spam thresholds, fee rates) to ensure stability during the beta.
-* **Phase 2 (Hybrid):** ZEU holders can vote on "Signal Proposals" to guide development.
-* **Phase 3 (Full DAO):** The protocol's upgrade keys are transferred to a Timelock Governance Contract. ZEU holders vote directly on smart contract upgrades and Treasury allocations.
+We are not targeting the "Hardcore DeFi" user alone. Our TAM (Total Addressable Market) includes:
 
----
+* **Remote Workers:** Who need instant cross-border payments.
+* **DAOs & Web3 Orgs:** Who currently use Discord (noisy) or Telegram (insecure).
+* **Enterprise:** Looking for a GDPR-compliant, encrypted communication tool that integrates with corporate treasury.
 
-## 8. Security & Threat Modeling
+### 6.2 The Moat: Network Effects and High Switching Costs
 
-### 8.1 Threat: Compromised AWS S3 Keys
-
-If an attacker gains access to the AWS S3 buckets:
-
-* **Impact:** They can download the encrypted blobs.
-* **Mitigation:** They *cannot* decrypt them. The decryption keys reside only on the user's device (MPC shards). The data is mathematically useless to the attacker (High Entropy Noise).
-
-### 8.2 Threat: Malicious Plugin (Phishing)
-
-An attacker creates an email that looks like a legitimate invoice but is a "Drainer."
-
-* **Mitigation 1:** The **MulaMail Registry** assigns a "Verified Checkmark" to known domains (e.g., PayPal, Coinbase).
-* **Mitigation 2:** The client performs semantic analysis on the transaction instruction data. If it detects a `SetAuthority` or `ApproveAll` instruction on a suspicious contract, it auto-rejects the request.
+As more users bind their email to their Solana identity via MulaMail 2.0, the **Identity Map** becomes an invaluable asset. Once a user’s professional and financial life is unified in one inbox, the friction of moving back to a "dumb" inbox like Gmail becomes a competitive advantage for MulaMail.
 
 ---
 
-## 9. Roadmap
+## 7. Security & Compliance (Trust Framework)
 
-**Q1 2026: The Alpha (MVP)**
+### 7.1 Non-Custodial Guarantee
 
-* Launch of Web Client (MulaMail.io).
-* Integration of Privy/Web3Auth for MPC Login.
-* Basic Email Send/Receive with Ed25519->X25519 Encryption.
-* ZEU Token Smart Contract Deployment (Devnet).
+MulaMail 2.0 uses **Hardware Security Modules (HSMs)** and **Trusted Execution Environments (TEEs)** to handle MPC shards. At no point can a MulaMail employee or a malicious actor reconstruct a user's key without the user’s active participation.
 
-**Q2 2026: The Programmable Era**
+### 7.2 Regulatory Readiness
 
-* Full support for Solana Actions & Blinks.
-* Mobile App Beta (iOS TestFlight / Android APK).
-* Integration of ZK Compression for Mainnet account scaling.
-
-**Q3 2026: The ZEU Economy**
-
-* Token Generation Event (TGE) and Airdrop.
-* Activation of "Staked Anti-Spam" filters.
-* Developer SDK Release: "Build your own Email Plugin."
-
-**Q4 2026: Enterprise & Expansion**
-
-* **MulaMail Business:** Custom domain support (`@company.eth` or `@company.sol`) mapping.
-* Fiat On-Ramp integration (Stripe) directly in the client.
-* Cross-chain Bridge (Support for EVM-based Actions).
+MulaMail 2.0 is designed with **GDPR and CCPA** in mind. Because the content is stored off-chain (S3) and encrypted, users retain the "Right to be Forgotten" by deleting their S3 blobs—a feat impossible with pure on-chain storage.
 
 ---
 
-## 10. Conclusion
+## 8. Roadmap: The Vision for 2026-2027
 
-MulaMail 2.0 is not merely an upgrade to email; it is a **re-platforming of the internet's communication layer**. By replacing the centralized servers of Web2 with the cryptographic guarantees of Solana, and replacing static text with executable Blinks, we are unlocking a new economy.
+### Phase 1: The Genesis (Current)
 
-In this new world, an email is a wallet, a message is a transaction, and identity is sovereign.
+* Launch of Web Client MVP.
+* ZEU Token Launch & Initial Exchange Offering.
+* Support for USDC/SOL interactive Blinks.
+
+### Phase 2: The Expansion (Q3 2026)
+
+* Mobile App release with **Passkey/FaceID** integration.
+* Launch of the Mula-Plugin Store.
+* Integration of **ZK Compression** for millions of accounts.
+
+### Phase 3: The Universal Protocol (2027)
+
+* **Cross-Chain Blinks:** Use MulaMail to interact with Ethereum or Base via Solana messaging.
+* **Enterprise SDK:** "MulaMail for Business" allows companies to self-host their encrypted storage.
+
+---
+
+## 9. Conclusion: The Future is Integrated
+
+MulaMail 2.0 is the final piece of the Web3 puzzle. By taking the world’s most used communication tool—email—and supercharging it with the world’s most efficient blockchain, we are creating a new category of software: **Financial Communication.**
+
+For investors, ZEU represents a stake in the infrastructure that will power the next generation of digital commerce. For users, it is finally an inbox that respects their privacy and empowers their capital.
+
+**MulaMail 2.0: Send Message. Move Value. Own Identity.**
+
+---
+
+### What's Next?
+
+1. **Pitch Deck Generation:** Would you like me to condense this into a 10-slide visual presentation for investors?
+2. **Smart Contract Draft:** Shall I write the Solana (Anchor) code for the **ZEU Anti-Spam staking contract**?
+3. **GTM Strategy:** Should we detail the "Referral-to-Earn" viral mechanics to hit the first 100,000 users?
 
