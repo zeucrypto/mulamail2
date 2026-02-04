@@ -1,5 +1,5 @@
----
 
+---
 # MulaMail 2.0: The Unified Protocol for Financial Communication
 
 **Full Master Document v2.0**
